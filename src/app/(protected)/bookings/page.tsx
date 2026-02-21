@@ -1,13 +1,21 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useBookings } from "@/lib/hooks/useCompanyScopedCollections";
 import { toJsDate } from "@/lib/utils/date";
 
 export default function BookingsPage() {
-  const searchParams = useSearchParams();
-  const selectedId = searchParams.get("selected");
   const { data: bookings } = useBookings();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const fromQuery = params.get("selected");
+    if (fromQuery) {
+      setSelectedId(fromQuery);
+    }
+  }, []);
 
   const now = new Date();
   const upcoming = bookings.filter((b) => toJsDate(b.date) >= now);

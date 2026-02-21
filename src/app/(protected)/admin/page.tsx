@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useNotifications } from "@/lib/notifications/NotificationContext";
 import {
@@ -63,7 +63,6 @@ const INITIAL_USERS: AdminUserSummary[] = [
 
 export default function AdminPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { profile } = useAuth();
 
   const { data: company } = useCompany();
@@ -100,6 +99,7 @@ export default function AdminPage() {
   const [adminCorrespondence, setAdminCorrespondence] = useState(correspondence);
   const [replySubject, setReplySubject] = useState("");
   const [replyBody, setReplyBody] = useState("");
+  const [activeSection, setActiveSection] = useState<AdminSection>("users");
 
   useEffect(() => {
     setAdminCorrespondence(correspondence);
@@ -114,8 +114,12 @@ export default function AdminPage() {
     }
   }, [selectedUserId, users]);
 
-  const sectionParam = searchParams.get("section") as AdminSection | null;
-  const activeSection: AdminSection = sectionParam ?? "users";
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const section = (params.get("section") as AdminSection | null) ?? "users";
+    setActiveSection(section);
+  }, []);
 
   if (!profile || profile.role !== "admin") {
     router.push("/dashboard");

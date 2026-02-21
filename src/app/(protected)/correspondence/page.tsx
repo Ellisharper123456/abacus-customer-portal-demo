@@ -1,21 +1,21 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCorrespondence } from "@/lib/hooks/useCompanyScopedCollections";
 import { toJsDate } from "@/lib/utils/date";
 
 export default function CorrespondencePage() {
-  const searchParams = useSearchParams();
   const { data: correspondence } = useCorrespondence();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fromQuery = searchParams.get("selected");
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const fromQuery = params.get("selected");
     if (fromQuery) {
       setSelectedId(fromQuery);
     }
-  }, [searchParams]);
+  }, []);
 
   const selected = correspondence.find((item) => item.id === selectedId) ?? null;
 
