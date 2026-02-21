@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { ReactNode } from "react";
 import ClientProviders from "./ClientProviders";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Abacus Customer Portal",
   description: "Customer portal for Abacus clients",

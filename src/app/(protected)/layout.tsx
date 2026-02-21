@@ -1,9 +1,9 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useNotifications } from "@/lib/notifications/NotificationContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
@@ -13,10 +13,24 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
   const { user, profile, loading, signOut } = useAuth();
   const pathname = usePathname();
   const isAdmin = profile?.role === "admin";
-  const searchParams = useSearchParams();
   const { notifications, dismissedIds } = useNotifications();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [adminSection, setAdminSection] = useState<string>("users");
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const syncFromLocation = () => {
+      const params = new URLSearchParams(window.location.search);
+      const section = params.get("section") || "users";
+      setAdminSection(section);
+    };
+
+    syncFromLocation();
+    window.addEventListener("popstate", syncFromLocation);
+    return () => window.removeEventListener("popstate", syncFromLocation);
+  }, []);
 
   const unreadCount = notifications.filter(
     (n) => !dismissedIds.includes(n.id)
@@ -34,8 +48,6 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
     router.push("/login");
     return null;
   }
-
-  const adminSection = searchParams.get("section") ?? "users";
 
   const navItems: { href: string; label: string; section?: string }[] = isAdmin
     ? [
@@ -103,6 +115,11 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => {
+                  if (isAdminNav && item.section) {
+                    setAdminSection(item.section);
+                  }
+                }}
                 className={`flex items-center rounded-md px-2 py-2 font-medium transition hover:bg-slate-50 dark:hover:bg-slate-800/80 ${
                   active
                     ? "bg-slate-100 text-brand-700 dark:bg-slate-800/90 dark:text-slate-50"
@@ -181,7 +198,12 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setMobileNavOpen(false)}
+                    onClick={() => {
+                      if (isAdminNav && item.section) {
+                        setAdminSection(item.section);
+                      }
+                      setMobileNavOpen(false);
+                    }}
                     className={`rounded-full px-3 py-1 text-xs font-medium shadow-sm ${
                       active
                         ? "bg-brand-600 text-white"
