@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userCompanyId() {
+      return userDoc().data.companyId;
+    }
+
+    function matchesUserCompany() {
+      return resource.data.companyId == userCompanyId();
+    }
+
+    function matchesUserCompanyNew() {
+      return request.resource.data.companyId == userCompanyId();
+    }
+
+    function isZapier() {
+      // Configure Zapier to authenticate with a service account or custom token
+      // that carries { zapier: true } in custom claims.
+      return request.auth.token.zapier == true;
+    }
+
+    match /users/{uid} {
+      allow read: if isSignedIn() && uid == request.auth.uid;
+      allow write: if false; // managed by backend / admin only
+    }
+
+    match /companies/{companyId} {
+      allow read: if isSignedIn() && companyId == userCompanyId();
+      allow write: if false;
+    }
+
+    match /systems/{id} {
+      allow read: if isSignedIn() && matchesUserCompany();
+      allow write: if false;
+    }
+
+    match /bookings/{id} {
+      allow read: if isSignedIn() && matchesUserCompany();
+      // Bookings are synced from Payacca via Zapier only.
+      allow write: if false;
+    }
+
+    match /documents/{id} {
+      allow read: if isSignedIn() && matchesUserCompany();
+      // Documents are managed by Abacus staff / Zapier, not end users.
+      allow write: if false;
+    }
+
+    match /correspondence/{id} {
+      allow read: if isSignedIn() && matchesUserCompany();
+      // Created by Zapier when emails are sent.
+      allow write: if false;
+    }
+
+    match /supportTickets/{id} {
+      // Users can create tickets only for their own company and must not set zapSynced.
+      allow create: if
+        isSignedIn() &&
+        matchesUserCompanyNew() &&
+        request.resource.data.zapSynced == false &&
+        !("zapSynced" in resource.data);
+
+      allow read: if isSignedIn() && matchesUserCompany();
+
+      // Only Zapier (or backend) can update zapSynced and ticket status.
+      allow update: if isZapier();
+      allow delete: if false;
+    }
+
+    match /referrals/{id} {
+      // Users can create referrals only for their own company and must not set zapSynced.
+      allow create: if
+        isSignedIn() &&
+        matchesUserCompanyNew() &&
+        request.resource.data.zapSynced == false &&
+        !("zapSynced" in resource.data);
+
+      allow read: if isSignedIn() && matchesUserCompany();
+
+      // Only Zapier / backend can mark referrals as synced.
+      allow update: if isZapier();
+      allow delete: if false;
+    }
+
+    match /promotions/{id} {
+      // Promotions are global, read-only for all signed-in users.
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+  }
+}

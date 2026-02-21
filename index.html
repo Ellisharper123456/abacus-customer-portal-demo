@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Abacus — Support Ticket</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --navy:#06283D;
+      --accent:#33A06B;
+      --muted:#6B7A86;
+      --bg:#F6F8F9;
+      --card:#ffffff;
+      --radius:12px;
+      --maxw:880px;
+    }
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:linear-gradient(180deg,var(--bg),#fff);
+      color:var(--navy);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:28px;
+    }
+    .container{
+      width:100%;
+      max-width:var(--maxw);
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:0 10px 30px rgba(6,40,61,0.08);
+      overflow:hidden;
+      display:grid;
+      grid-template-columns:1fr 420px;
+    }
+    .left{padding:28px 32px;}
+    header.form-header{display:flex;gap:16px;align-items:center;margin-bottom:6px;flex-wrap:wrap;}
+    .logo{width:150px;height:90px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .logo img{width:100%;height:100%;object-fit:contain}
+    h1{font-size:20px;margin:0}
+    p.lead{margin:6px 0 18px;color:var(--muted);font-size:14px}
+    form{display:flex;flex-direction:column;gap:12px}
+    .row{display:flex;gap:12px}
+    .col{flex:1}
+    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+    input[type="text"],input[type="email"],input[type="tel"],select,textarea{
+      width:100%;padding:10px 12px;border:1px solid #e6e9eb;border-radius:8px;font-size:14px;background:#fff;box-sizing:border-box;
+    }
+    textarea{min-height:110px;resize:vertical;}
+    .small{font-size:13px;color:var(--muted)}
+    .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px;}
+    button.primary{
+      background:linear-gradient(180deg,var(--accent),#2c8b58);
+      border:0;color:#fff;padding:10px 14px;
+      border-radius:10px;font-weight:600;cursor:pointer;
+    }
+    button.ghost{
+      background:transparent;border:1px solid #d6dde0;
+      color:var(--navy);padding:10px 12px;border-radius:10px;cursor:pointer;
+    }
+    .right{background:linear-gradient(180deg,#fbffff,#f3fbf6);padding:20px;border-left:1px solid #eef3f3;}
+    .ticket-card{background:#fff;border-radius:10px;padding:14px;box-shadow:0 6px 18px rgba(6,40,61,0.04);margin-bottom:16px;}
+    .ticket-id{display:flex;gap:10px;align-items:center;justify-content:space-between;}
+    .ticket-id .id{font-family:monospace;font-weight:700;color:var(--navy);letter-spacing:0.6px;background:#f2fbf6;padding:6px 10px;border-radius:8px;}
+    .copy-btn{font-size:13px;padding:6px 8px;border-radius:8px;border:1px solid #d2dfd6;cursor:pointer;background:transparent;}
+    .fixes{margin-top:10px}
+    .fix-item{padding:10px;background:#fff;border-radius:8px;margin-bottom:8px;border:1px solid #eef7f0}
+    .fix-item h4{margin:0 0 6px 0;font-size:14px}
+    .fix-item p{margin:0;color:var(--muted);font-size:13px}
+    .status{font-size:13px;padding:8px;border-radius:8px;margin-top:8px;background:#f2f6ff;color:#10316b;}
+    .muted-note{font-size:13px;color:var(--muted);margin-top:10px}
+
+    /* Highlighted fields: First/Last Name & Address */
+    .highlighted-input{
+      background:#f2fbf6;
+      border:1px solid #33A06B;
+      padding:12px 14px;
+      border-radius:10px;
+      font-weight:500;
+      font-size:14px;
+      transition: all 0.2s ease;
+    }
+    .highlighted-input:focus{
+      outline:none;
+      box-shadow:0 0 6px rgba(51,160,107,0.4);
+      border-color:#2c8b58;
+    }
+
+    @media (max-width:768px){
+      body{padding:16px;align-items:flex-start;}
+      .container{display:flex;flex-direction:column;box-shadow:0 4px 16px rgba(6,40,61,0.06);}
+      .left{padding:20px;}
+      .row{flex-direction:column;gap:8px;}
+      form{gap:10px;}
+      .actions{flex-direction:column;align-items:stretch;}
+      button.primary,button.ghost{width:100%;}
+      .right{border-left:none;border-top:1px solid #eef3f3;background:#f7faf8;padding:16px;}
+    }
+
+    /* ✅ Success modal styling */
+    #successModal{
+      display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+      background:rgba(0,0,0,0.5);align-items:center;justify-content:center;
+      z-index:9999;
+    }
+    #successModal .modal-content{
+      background:#fff;padding:30px 40px;border-radius:16px;text-align:center;
+      box-shadow:0 10px 30px rgba(0,0,0,0.2);max-width:360px;
+    }
+    #successModal h2{color:#33A06B;margin-top:0;}
+    #successModal button{
+      background:#33A06B;color:#fff;border:none;padding:10px 18px;
+      border-radius:10px;font-weight:600;cursor:pointer;
+    }
+
+    .error-message {
+      color: #c00;
+      font-size: 12px;
+      margin-top: 2px;
+      display: block;
+      min-height: 16px;
+    }
+
+    #quickFixesArea {
+      border: 2px solid #33A06B;
+      background: #f2fbf6;
+      border-radius: 14px;
+      padding: 18px 16px;
+      margin-top: 12px;
+      box-shadow: 0 2px 12px rgba(51,160,107,0.08);
+      transition: box-shadow 0.2s;
+    }
+    #quickFixesArea.active {
+      box-shadow: 0 4px 24px rgba(51,160,107,0.18);
+      border-color: #2c8b58;
+    }
+    #quickFixesArea .fix-item h4 {
+      font-size: 16px;
+      color: #33A06B;
+      margin-bottom: 4px;
+    }
+    #quickFixesArea .fix-item p {
+      font-size: 14px;
+      color: #06283D;
+    }
+    #quickFixesArea .fix-icon {
+      font-size: 32px;
+      color: #33A06B;
+      margin-bottom: 8px;
+      display: block;
+      text-align: center;
+    }
+
+    /* Match placeholder style to input text */
+    input::placeholder,
+    textarea::placeholder {
+      font-family: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      font-size: 14px;
+      color: var(--muted);
+      opacity: 1; /* Ensure full color */
+    }
+
+    /* Match textarea text style to other inputs */
+    textarea {
+      font-family: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      font-size: 14px;
+      color: var(--navy);
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="main">
+    <div class="left">
+      <header class="form-header">
+        <div class="logo">
+          <img src="Abacus-logo.png" alt="Abacus Energy Solutions logo">
+        </div>
+        <div>
+          <h1>Report a system issue</h1>
+          <p class="lead">Having trouble with your ASHP / GSHP / Solar / Battery / EV charger? Fill this form and we'll get back to you.</p>
+        </div>
+      </header>
+
+      <form id="supportForm" novalidate>
+        <div class="row">
+          <div class="col">
+            <label>First Name</label>
+            <input type="text" name="firstname" required>
+            <span class="error-message" id="error-firstname"></span>
+          </div>
+          <div class="col">
+            <label>Last Name</label>
+            <input type="text" name="lastname" required>
+            <span class="error-message" id="error-lastname"></span>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <label>Email</label>
+            <input type="email" name="email" required>
+            <span class="error-message" id="error-email"></span>
+          </div>
+          <div class="col">
+            <label>Telephone</label>
+            <input type="tel" name="phone" required>
+            <span class="error-message" id="error-phone"></span>
+          </div>
+        </div>
+
+        <div class="col">
+          <label>Post Code</label>
+          <input type="text" name="postcode" required>
+          <span class="error-message" id="error-postcode"></span>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <label>Product / System</label>
+            <select name="product" required>
+              <option value="">Select</option>
+              <option value="ashp">ASHP</option>
+              <option value="gshp">GSHP</option>
+              <option value="solar">Solar PV</option>
+              <option value="battery">Battery</option>
+              <option value="ev">EV Charger</option>
+            </select>
+            <span class="error-message" id="error-product"></span>
+          </div>
+          <div class="col">
+            <label>Symptom</label>
+            <select name="symptom" required>
+              <option value="">Select</option>
+              <option value="no_power">No power</option>
+              <option value="low_output">Low output</option>
+              <option value="error_code">Error code</option>
+              <option value="strange_noise">Strange noise</option>
+              <option value="charging_issue">Not charging</option>
+              <option value="other">Other</option>
+            </select>
+            <span class="error-message" id="error-symptom"></span>
+          </div>
+        </div>
+
+        <label>More details</label>
+        <textarea name="details" required
+  placeholder="Include: when the issue started, what is happening, any error codes, what you have tried to fix the problem, and whether you have contacted the manufacturer’s helpline."></textarea>
+        <span class="error-message" id="error-details"></span>
+
+        <div class="actions">
+          <button type="submit" class="primary">Create ticket</button>
+          <button type="button" id="clearBtn" class="ghost">Clear</button>
+        </div>
+      </form>
+
+      <div id="resultMessage" class="muted-note"></div>
+    </div>
+
+    <aside class="right">
+      <div class="ticket-card">
+        <div class="ticket-id">
+          <div class="id" id="ticketId">—</div>
+          <button class="copy-btn" id="copyIdBtn">Copy</button>
+        </div>
+        <div class="status" id="statusLabel">Draft</div>
+      </div>
+
+      <h3>Suggested quick fixes</h3>
+      <div id="quickFixesArea" class="fixes">
+        <div class="fix-item"><h4>No ticket yet</h4><p>Complete form to get fixes.</p></div>
+      </div>
+    </aside>
+  </div>
+
+  <div id="successModal">
+    <div class="modal-content">
+      <h2>✅ Submitted Successfully!</h2>
+      <p>Thanks for contacting us — our team will be in touch soon.</p>
+      <button id="closeModalBtn">Close</button>
+    </div>
+  </div>
+
+  <script>
+const quickFixes = {
+  ashp: {
+    no_power: [
+      { title: "Check isolator", body: "Ensure external isolator is ON." },
+      { title: "Check circuit breaker", body: "Make sure the breaker in your fuse box is not tripped." },
+      { title: "Check display", body: "Is the controller/display showing any lights or messages?" }
+    ],
+    low_output: [
+      { title: "Check filters", body: "Clean or replace air filters if dirty." },
+      { title: "Check settings", body: "Ensure thermostat and system settings are correct." },
+      { title: "Check radiators", body: "Bleed radiators to remove trapped air." }
+    ],
+    error_code: [
+      { title: "Note error code", body: "Write down the error code for support." },
+      { title: "Restart system", body: "Try turning the system off and on again." }
+    ],
+    strange_noise: [
+      { title: "Check for obstructions", body: "Remove any debris near the outdoor unit." },
+      { title: "Check fan", body: "Is the fan running smoothly?" }
+    ],
+    charging_issue: [
+      { title: "Check power", body: "Ensure the system is powered and charging indicator is on." }
+    ],
+    other: [
+      { title: "Describe issue", body: "Give as much detail as possible." }
+    ]
+  },
+  gshp: {
+    no_power: [
+      { title: "Check isolator", body: "Ensure external isolator is ON." },
+      { title: "Check circuit breaker", body: "Make sure the breaker in your fuse box is not tripped." }
+    ],
+    low_output: [
+      { title: "Check settings", body: "Ensure thermostat and system settings are correct." },
+      { title: "Check radiators", body: "Bleed radiators to remove trapped air." }
+    ],
+    error_code: [
+      { title: "Note error code", body: "Write down the error code for support." },
+      { title: "Restart system", body: "Try turning the system off and on again." }
+    ],
+    strange_noise: [
+      { title: "Check for obstructions", body: "Remove any debris near the outdoor unit." }
+    ],
+    charging_issue: [
+      { title: "Check power", body: "Ensure the system is powered and charging indicator is on." }
+    ],
+    other: [
+      { title: "Contact support", body: "We'll assist you further." }
+    ]
+  },
+  solar: {
+    no_power: [
+      { title: "Check inverter", body: "Ensure inverter lights are on." },
+      { title: "Check isolator", body: "Ensure isolator switches are ON." }
+    ],
+    low_output: [
+      { title: "Check panels", body: "Are panels clean and unobstructed?" },
+      { title: "Check inverter", body: "Any warning lights or error codes?" }
+    ],
+    error_code: [
+      { title: "Note error code", body: "Write down the error code for support." },
+      { title: "Restart inverter", body: "Turn inverter off and on if safe to do so." }
+    ],
+    strange_noise: [
+      { title: "Check inverter", body: "Is the inverter making unusual sounds?" }
+    ],
+    charging_issue: [
+      { title: "Check battery", body: "Is the battery showing as charging?" }
+    ],
+    other: [
+      { title: "Check inverter", body: "Ensure inverter lights are on." }
+    ]
+  },
+  battery: {
+    no_power: [
+      { title: "Check isolator", body: "Ensure battery isolator is ON." },
+      { title: "Check display", body: "Is the battery display showing any lights or messages?" }
+    ],
+    low_output: [
+      { title: "Check charge level", body: "Is the battery sufficiently charged?" }
+    ],
+    error_code: [
+      { title: "Note error code", body: "Write down the error code for support." },
+      { title: "Restart system", body: "Power off/on the battery system safely." }
+    ],
+    strange_noise: [
+      { title: "Check for obstructions", body: "Remove any debris near the battery unit." }
+    ],
+    charging_issue: [
+      { title: "Check connections", body: "Ensure all cables are securely connected." }
+    ],
+    other: [
+      { title: "Restart system", body: "Power off/on the battery system safely." }
+    ]
+  },
+  ev: {
+    no_power: [
+      { title: "Check charger power", body: "Ensure charger is plugged in and powered." },
+      { title: "Check vehicle connection", body: "Is the cable securely connected to the car?" }
+    ],
+    low_output: [
+      { title: "Check settings", body: "Is the charger set to the correct output?" }
+    ],
+    error_code: [
+      { title: "Note error code", body: "Write down the error code for support." },
+      { title: "Restart charger", body: "Unplug and restart your charger." }
+    ],
+    strange_noise: [
+      { title: "Check for obstructions", body: "Remove any debris near the charger." }
+    ],
+    charging_issue: [
+      { title: "Check cable", body: "Try a different charging cable if available." },
+      { title: "Restart charger", body: "Unplug and restart your charger." }
+    ],
+    other: [
+      { title: "Reset charger", body: "Unplug and restart your charger." }
+    ]
+  }
+};
+function renderQuickFixes(product,symptom){
+  const area=document.getElementById('quickFixesArea');
+  area.classList.remove('active');
+  area.innerHTML="";
+  if(!product||!symptom){
+    area.innerHTML=`<div class="fix-item"><h4>Incomplete</h4><p>Select both to view fixes.</p></div>`;
+    return;
+  }
+  const bucket=(quickFixes[product]&&quickFixes[product][symptom])||quickFixes[product]?.other||[{title:"Contact support",body:"We need more details."}];
+  area.innerHTML = `<span class="fix-icon">💡</span><h4>Before you submit your ticket, have you tried:</h4>`;
+  bucket.forEach(f=>{
+    const div=document.createElement('div');
+    div.className='fix-item';
+    div.innerHTML=`<h4>${f.title}</h4><p>${f.body}</p>`;
+    area.appendChild(div);
+  });
+  area.classList.add('active');
+  area.scrollIntoView({behavior:"smooth",block:"center"});
+}
+// Real-time quick fix update
+document.querySelector("[name='product']").addEventListener("change",()=>{
+  renderQuickFixes(
+    document.querySelector("[name='product']").value,
+    document.querySelector("[name='symptom']").value
+  );
+});
+document.querySelector("[name='symptom']").addEventListener("change",()=>{
+  renderQuickFixes(
+    document.querySelector("[name='product']").value,
+    document.querySelector("[name='symptom']").value
+  );
+});
+
+function generateTicketId(prefix="ABA") {
+  const now = Date.now(); // milliseconds since 1970
+  return `${prefix}-${now.toString().slice(-6)}`; // e.g. ABA-123456
+}
+
+function validateEmail(email) {
+  // Simple email regex
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validateUKPhone(phone) {
+  // UK mobile: 07xxx, UK landline: 01/02/03xxx
+  return /^(\+44\s?7\d{3}|\(?07\d{3}\)?|\+44\s?1\d{3}|\(?01\d{3}\)?|\+44\s?2\d{3}|\(?02\d{3}\)?|\+44\s?3\d{3}|\(?03\d{3}\)?)[\s\-]?\d{3}[\\s\-]?\d{3,4}$/.test(phone.replace(/\s+/g, ''));
+}
+
+function validateUKPostcode(postcode) {
+  // UK postcode regex
+  return /^([A-Z]{1,2}\d{1,2}[A-Z]?)\s?\d[A-Z]{2}$/i.test(postcode.trim());
+}
+
+const WEBHOOK_URL="https://script.google.com/macros/s/AKfycbxSED4Gun59O94KdVJ5F-OXV8B95TMflvAuZ9uza9qlJtr16j1z9a--uq7QOCpzKH1n/exec";
+const form=document.getElementById("supportForm");
+const statusLabel=document.getElementById("statusLabel");
+const ticketIdEl=document.getElementById("ticketId");
+const resultMessage=document.getElementById("resultMessage");
+const modal=document.getElementById("successModal");
+const closeModalBtn=document.getElementById("closeModalBtn");
+
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+
+  // Clear previous errors
+  ["firstname","lastname","email","phone","postcode","product","symptom"].forEach(field=>{
+    document.getElementById("error-"+field).textContent = "";
+  });
+  resultMessage.innerHTML = "";
+
+  // Get values
+  const firstname = form.firstname.value.trim();
+  const lastname = form.lastname.value.trim();
+  const email = form.email.value.trim();
+  const phone = form.phone.value.trim();
+  const postcode = form.postcode.value.trim();
+  const product = form.product.value;
+  const symptom = form.symptom.value;
+  const details = form.details.value.trim();
+
+  // Validation
+  let hasError = false;
+  let firstErrorField = null;
+  if (!firstname) {
+    document.getElementById("error-firstname").textContent = "First Name is required.";
+    hasError = true;
+    firstErrorField = firstErrorField || form.firstname;
+  }
+  if (!lastname) {
+    document.getElementById("error-lastname").textContent = "Last Name is required.";
+    hasError = true;
+    firstErrorField = firstErrorField || form.lastname;
+  }
+  if (!email) {
+    document.getElementById("error-email").textContent = "Email is required.";
+    hasError = true;
+    firstErrorField = firstErrorField || form.email;
+  } else if (!validateEmail(email)) {
+    document.getElementById("error-email").textContent = "Enter a valid email address.";
+    hasError = true;
+    firstErrorField = firstErrorField || form.email;
+  }
+  if (!phone) {
+    document.getElementById("error-phone").textContent = "Telephone is required.";
+    hasError = true;
+    firstErrorField = firstErrorField || form.phone;
+  } else if (!validateUKPhone(phone)) {
+    document.getElementById("error-phone").textContent = "Enter a valid UK telephone number.";
+    hasError = true;
+    firstErrorField = firstErrorField || form.phone;
+  }
+  if (!postcode) {
+    document.getElementById("error-postcode").textContent = "Post Code is required.";
+    hasError = true;
+    firstErrorField = firstErrorField || form.postcode;
+  } else if (!validateUKPostcode(postcode)) {
+    document.getElementById("error-postcode").textContent = "Enter a valid UK postcode.";
+    hasError = true;
+    firstErrorField = firstErrorField || form.postcode;
+  }
+  if (!product) {
+    document.getElementById("error-product").textContent = "Product/System is required.";
+    hasError = true;
+    firstErrorField = firstErrorField || form.product;
+  }
+  if (!symptom) {
+    document.getElementById("error-symptom").textContent = "Symptom is required.";
+    hasError = true;
+    firstErrorField = firstErrorField || form.symptom;
+  }
+  if (!details) {
+    document.getElementById("error-details").textContent = "Provide as much detail as possible.";
+    hasError = true;
+    firstErrorField = firstErrorField || form.details;
+  }
+
+  if (hasError) {
+    statusLabel.textContent = "Draft";
+    if (firstErrorField) {
+      firstErrorField.scrollIntoView({behavior: "smooth", block: "center"});
+      firstErrorField.focus();
+    }
+    return;
+  }
+
+  const ticketId=generateTicketId();
+  ticketIdEl.textContent=ticketId;
+  statusLabel.textContent="Submitting...";
+  const btn=form.querySelector("button[type='submit']");
+  btn.disabled=true;
+  const formData=new FormData(form);
+  formData.append("ticketId",ticketId);
+  formData.append("createdAt",new Date().toISOString());
+  formData.append("source",window.location.href);
+  formData.append("site","abacusenergysolutions.co.uk");
+  try{
+    await fetch(WEBHOOK_URL,{method:"POST",mode:"no-cors",body:formData});
+    statusLabel.textContent="Submitted!";
+    resultMessage.innerHTML=`<strong>✅ Ticket submitted!</strong> Your ID: <span>${ticketId}</span>`;
+    form.reset();
+    modal.style.display="flex";
+  }catch(err){
+    statusLabel.textContent="Submission error";
+    resultMessage.textContent="❌ " + err.message;
+  }
+  btn.disabled=false;
+});
+
+closeModalBtn.addEventListener("click",()=>modal.style.display="none");
+window.addEventListener("click",e=>{if(e.target===modal)modal.style.display="none";});
+  </script>
+</body>
+</html>
