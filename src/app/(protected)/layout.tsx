@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useNotifications } from "@/lib/notifications/NotificationContext";
 import { useTheme } from "@/lib/theme/ThemeContext";
+import { AdminSection, AdminSectionContext } from "@/lib/admin/AdminSectionContext";
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -15,7 +16,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
   const isAdmin = profile?.role === "admin";
   const { notifications, dismissedIds } = useNotifications();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [adminSection, setAdminSection] = useState<string>("users");
+  const [adminSection, setAdminSection] = useState<AdminSection>("users");
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
 
     const syncFromLocation = () => {
       const params = new URLSearchParams(window.location.search);
-      const section = params.get("section") || "users";
+      const section = (params.get("section") as AdminSection | null) || "users";
       setAdminSection(section);
     };
 
@@ -85,8 +86,9 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
       ];
 
   return (
-    <div className="flex min-h-screen bg-slate-100 bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 dark:from-black dark:via-slate-950 dark:to-black">
-      <aside className="hidden w-64 flex-col border-r border-slate-200 bg-white/90 px-4 py-6 backdrop-blur md:flex dark:border-slate-800 dark:bg-neutral-950/70">
+    <AdminSectionContext.Provider value={{ section: adminSection, setSection: setAdminSection }}>
+      <div className="flex min-h-screen bg-slate-100 bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 dark:from-black dark:via-slate-950 dark:to-black">
+        <aside className="hidden w-64 flex-col border-r border-slate-200 bg-white/90 px-4 py-6 backdrop-blur md:flex dark:border-slate-800 dark:bg-neutral-950/70">
         <div className="mb-6 flex items-center gap-3">
           <div className="relative h-8 w-8 overflow-hidden rounded-md bg-slate-100">
             <Image
@@ -117,7 +119,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
                 href={item.href}
                 onClick={() => {
                   if (isAdminNav && item.section) {
-                    setAdminSection(item.section);
+                    setAdminSection(item.section as AdminSection);
                   }
                 }}
                 className={`flex items-center rounded-md px-2 py-2 font-medium transition hover:bg-slate-50 dark:hover:bg-slate-800/80 ${
@@ -151,8 +153,8 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
             Sign out
           </button>
         </div>
-      </aside>
-      <div className="flex flex-1 flex-col">
+        </aside>
+        <div className="flex flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur md:hidden dark:border-slate-800 dark:bg-neutral-950/80">
           <div className="flex items-center gap-2">
             <div className="relative h-7 w-7 overflow-hidden rounded-md bg-slate-100">
@@ -200,7 +202,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
                     href={item.href}
                     onClick={() => {
                       if (isAdminNav && item.section) {
-                        setAdminSection(item.section);
+                        setAdminSection(item.section as AdminSection);
                       }
                       setMobileNavOpen(false);
                     }}
@@ -215,14 +217,27 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
                 );
               })}
             </div>
+            <button
+              type="button"
+              onClick={() =>
+                signOut().then(() => {
+                  setMobileNavOpen(false);
+                  router.push("/login");
+                })
+              }
+              className="mt-3 inline-flex w-full items-center justify-center rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm hover:border-slate-300 dark:border-slate-700 dark:bg-black dark:text-slate-100"
+            >
+              Sign out
+            </button>
           </nav>
         )}
-        <main className="flex-1 px-0 py-4 sm:px-4 sm:py-6 md:px-8 md:py-8">
-          <div className="mx-0 max-w-none rounded-none bg-white p-4 shadow-none ring-0 ring-slate-100 backdrop-blur dark:bg-black md:mx-auto md:max-w-5xl md:rounded-2xl md:bg-white/90 md:p-6 md:shadow-sm md:ring-1 dark:md:bg-neutral-950/80 dark:md:ring-slate-800">
-            {children}
-          </div>
-        </main>
+          <main className="flex-1 px-0 py-4 sm:px-4 sm:py-6 md:px-8 md:py-8">
+            <div className="mx-0 max-w-none rounded-none bg-white p-4 shadow-none ring-0 ring-slate-100 backdrop-blur dark:bg-black md:mx-auto md:max-w-5xl md:rounded-2xl md:bg-white/90 md:p-6 md:shadow-sm md:ring-1 dark:md:bg-neutral-950/80 dark:md:ring-slate-800">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </AdminSectionContext.Provider>
   );
 }

@@ -12,8 +12,7 @@ import {
   useSystems,
 } from "@/lib/hooks/useCompanyScopedCollections";
 import { toJsDate } from "@/lib/utils/date";
-
-type AdminSection = "users" | "care-plans" | "tickets" | "upsell" | "correspondence";
+import { AdminSection, useAdminSection } from "@/lib/admin/AdminSectionContext";
 
 interface AdminUserSummary {
   id: string;
@@ -64,6 +63,7 @@ const INITIAL_USERS: AdminUserSummary[] = [
 export default function AdminPage() {
   const router = useRouter();
   const { profile } = useAuth();
+  const { section: activeSection } = useAdminSection();
 
   const { data: company } = useCompany();
   const { data: systems } = useSystems();
@@ -99,7 +99,6 @@ export default function AdminPage() {
   const [adminCorrespondence, setAdminCorrespondence] = useState(correspondence);
   const [replySubject, setReplySubject] = useState("");
   const [replyBody, setReplyBody] = useState("");
-  const [activeSection, setActiveSection] = useState<AdminSection>("users");
 
   useEffect(() => {
     setAdminCorrespondence(correspondence);
@@ -113,13 +112,6 @@ export default function AdminPage() {
       setEditUserStatus(selected.status);
     }
   }, [selectedUserId, users]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const section = (params.get("section") as AdminSection | null) ?? "users";
-    setActiveSection(section);
-  }, []);
 
   if (!profile || profile.role !== "admin") {
     router.push("/dashboard");
